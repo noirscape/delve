@@ -20,5 +20,4 @@ GPLv3.
 * No support for custom handlers in the config file (not workable on the Switch).
 * No support for command histories.
 * Default config file is loaded from `/switch/delve/delve.conf`.
-* New command called `openitem`. This command attempts to open an item from the currently visible gopher menu.
 * New command called `dlitem`. This command attempts to an item from the currently visible gopher menu. Files will be downloaded in accordance to the configuration.

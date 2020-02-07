@@ -351,30 +351,38 @@ char *next_token(char **str) {
 
 char *read_line(const char *fmt, ...) {
     Result rc=0;
-    char tmpoutstr[2048] = {0};
+	static char buffer[2000];
+	char* line;
 
     SwkbdConfig kbd;
     rc = swkbdCreate(&kbd, 0);
     if (R_SUCCEEDED(rc)) {
         swkbdConfigMakePresetDefault(&kbd);
         swkbdConfigSetSubText(&kbd, fmt);
-        rc = swkbdShow(&kbd, tmpoutstr, sizeof(tmpoutstr));
+        rc = swkbdShow(&kbd, buffer, sizeof(buffer));
+		if(R_SUCCEEDED(rc)) {
+			swkbdClose(&kbd);
+		}
     }
-    
-    static char buffer[256];
-	char *line;
-	if (fmt != NULL) {
-		va_list va;
-		va_start(va, fmt);
-		vprintf(fmt, va);
-		va_end(va);
-		fflush(stdout);
-	}
-	memset(buffer, 0, sizeof(buffer));
-	if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return NULL;
+	line = buffer;
 	line = str_skip(line, " \v\t");
 	line = str_split(&line, "\r\n");
-	return line ? line : "";
+	return line;
+    
+    // static char buffer[256];
+	// char *line;
+	// if (fmt != NULL) {
+	// 	va_list va;
+	// 	va_start(va, fmt);
+	// 	vprintf(fmt, va);
+	// 	va_end(va);
+	// 	fflush(stdout);
+	// }
+	// memset(buffer, 0, sizeof(buffer));
+	// if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return NULL;
+	// line = str_skip(line, " \v\t");
+	// line = str_split(&line, "\r\n");
+	// return line ? line : "";
 }
 
 
