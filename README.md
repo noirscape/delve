@@ -1,40 +1,22 @@
-# delve - a simple terminal gopher client
-Because Gopher should not die!
+# delve - A simple terminal gopher client
 
-[![Build Status](https://travis-ci.org/kieselsteini/delve.svg?branch=master)](https://travis-ci.org/kieselsteini/delve)
+This is a port of the delve gopher client to the Nintendo Switch. Requires Homebrew to run.
 
-## Overview
-- configurable gopher selector handlers
-- "powerful" shell
-- bookmarks
-- variables
-- command aliases
-- VT100 compatible with ANSI escape sequences
-- no external dependencies
-	- GNU readline is fully optional
-- internal pager for text & menus
-- less than *1k lines* of *C* code
+Has slight differences with the original delve, which are described below.
 
-## How to compile?
-- clone this git repo
-- just type `make` on any Unix compatible system (remove GNU readline if you don't have it)
-	- currently tested on
-		- macOS
-		- Linux
-		- OpenBSD 6.5
-- type `make install` to install it on the system (defaults to /usr/local)
+## Compiling
 
-## How to contribute?
-- send me pull-requests and I'll review and merge them :)
-- if you wish to appear on the `help authors` command just add yourself there
+Make sure you have devKitPro installed, then run Make.
 
 ## License
-- [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
 
-## Statistic
-Language|files|blank|comment|code
-:-------|-------:|-------:|-------:|-------:
-C|1|185|33|919
+GPLv3.
 
-## Help
-Just type `help` when the client is running.
+## Differences with the original delve
+
+* Pager works as follows: 
+  * Press the down key to show the next piece of information.
+  * Press `-` to enter a command at any point.
+* No support for custom handlers in the config file (not workable on the Switch).
+* Default config file is loaded from `/switch/delve/delve.conf`.
+* New command called `openlink`. This command attempts to open a gopher link.

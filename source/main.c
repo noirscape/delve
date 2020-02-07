@@ -20,6 +20,8 @@
 ================================================================================
 */
 /*============================================================================*/
+#include <switch.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -366,9 +368,8 @@ char *read_line(const char *fmt, ...) {
 
 
 int get_terminal_height() {
-	struct winsize wz;
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &wz);
-	return wz.ws_row - 2; /* substract 2 lines (1 for tmux etc., 1 for the prompt) */
+    // Ugly, use libnx method perhaps?
+	return 45;
 }
 
 
