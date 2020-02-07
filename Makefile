@@ -37,6 +37,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
+APP_TITLE	:=	delve
+APP_AUTHOR	:=	noirscape
+APP_VERSION	:=	0.15.4-nx
 DIRECTORY	:=	target/sd/switch/delve
 TARGET		:=	target/delve
 BUILD		:=	build
