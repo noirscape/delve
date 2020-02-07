@@ -74,6 +74,10 @@ Selector *history = NULL;
 Selector *menu = NULL;
 
 /*============================================================================*/
+bool show_command = false; // Boolean that forces applet mainloop to show swkbd.
+PrintConsole *console; // Holds the printconsole
+
+/*============================================================================*/
 void vlogf(const char *color, const char *fmt, va_list va) {
 	printf("\33[%sm", color);
 	vprintf(fmt, va);
@@ -347,11 +351,30 @@ char *next_token(char **str) {
 	}
 }
 
+// Method that verifies if a char* has characters
+// A string doesn't have characters if it is shorter than 1 or all characters are spaces
+// Returns 0 if no characters are in the string. Returns above zero if characters are in the string.
+int check_if_string_has_characters(char* string)
+{
+
+	if (strlen(string) < 1)
+		return 0;
+
+	int var = 0;
+	for (size_t loop_val = 0; loop_val < strlen(string); loop_val++) 
+	{
+		if (!isspace((int) string[loop_val]))
+			var++;
+	}
+
+	return var;
+}
 
 char *read_line(const char *fmt, ...) {
     Result rc=0;
-	static char buffer[2000];
-	char* line;
+	char buffer[2000];
+	char line_array[2000];
+	char *line;
 
     SwkbdConfig kbd;
     rc = swkbdCreate(&kbd, 0);
@@ -363,31 +386,25 @@ char *read_line(const char *fmt, ...) {
 			swkbdClose(&kbd);
 		}
     }
-	line = buffer;
+
+	if (strlen(buffer) == 0) // empty stuff
+		return "";
+	else if (!check_if_string_has_characters(buffer))
+		return "";
+	else
+	{
+		strcpy(line_array, buffer);
+		line = &line_array[0];
+	}
+
 	line = str_skip(line, " \v\t");
 	line = str_split(&line, "\r\n");
 	return line;
-    
-    // static char buffer[256];
-	// char *line;
-	// if (fmt != NULL) {
-	// 	va_list va;
-	// 	va_start(va, fmt);
-	// 	vprintf(fmt, va);
-	// 	va_end(va);
-	// 	fflush(stdout);
-	// }
-	// memset(buffer, 0, sizeof(buffer));
-	// if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return NULL;
-	// line = str_skip(line, " \v\t");
-	// line = str_split(&line, "\r\n");
-	// return line ? line : "";
 }
 
 
-int get_terminal_height() {
-    // Ugly, use libnx method perhaps?
-	return 45;
+int get_terminal_height() {	
+	return console->consoleHeight;
 }
 
 
@@ -402,7 +419,10 @@ int show_pager_stop() {
 			return 0;
 
 		if (kDown & KEY_MINUS)
+		{
+			show_command = true;
 			return 1;
+		}
 	}
 }
 
@@ -1008,18 +1028,20 @@ void shell() {
 
     while (appletMainLoop())
     {
+		consoleUpdate(NULL);
         hidScanInput();
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
 
         if (kDown & KEY_PLUS)
             break;
 
-        if (kDown & KEY_MINUS)
+        if (kDown & KEY_MINUS || show_command)
         {
+			show_command = false;
             line = read_line(print_selector(history, 0));
-            if((to =  find_selector(menu, line)) != NULL) navigate(to);
-            else eval(line, NULL);
-            puts("------ END OF COMMAND ------");
+			if((to = find_selector(menu, line)) != NULL) navigate(to);
+			else eval(line, NULL);
+			puts("------ END OF COMMAND ------");
         }
     }
 
@@ -1066,28 +1088,46 @@ void quit_client() {
 	free_selector(bookmarks);
 	free_selector(history);
 	free_selector(menu);
-	puts("\33[0m");
 }
 
 
-int main(int argc, char **argv) {
+int main() {
     // Init libnx console 
-    consoleInit(NULL);
+    console = consoleInit(NULL);
+	// Initialize sockets
+	Result rc = socketInitialize(socketGetDefaultInitConfig());
+	if (R_SUCCEEDED(rc)) {
+		atexit(quit_client);
 
-	atexit(quit_client);
+		load_config_files();
 
-	load_config_files();
+		printf(
+			"delve - 0.15.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
+			"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
+			"This is free software, and you are welcome to redistribute it\n" \
+			"under certain conditions; type `help license' for details.\n" \
+			"\n" \
+			"Type `help` for help. Press `-` to start entering commands.\n" \
+		);
 
-	puts(
-		"delve - 0.15.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
-		"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
-		"This is free software, and you are welcome to redistribute it\n" \
-		"under certain conditions; type `help license' for details.\n" \
-		"\n" \
-		"Type `help` for help.\n" \
-	);
+		// eval("set page_text on", NULL);
+		// eval("open gopherpedia.com", NULL);
 
-	shell();
+		shell();
+
+		// Clean up sockets
+		socketExit();
+	} else {
+		printf("Could not initalize sockets for some reason. Press plus to exit.");
+		while (appletMainLoop())
+		{
+			hidScanInput();
+			u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+
+			if (kDown & KEY_PLUS)
+				break;
+		}
+	}
 
     // Exit libnx console
     consoleExit(NULL);
