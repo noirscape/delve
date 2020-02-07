@@ -75,6 +75,7 @@ Selector *menu = NULL;
 
 /*============================================================================*/
 bool show_command = false; // Boolean that forces applet mainloop to show swkbd.
+bool force_exit = false; // If true, exit the application.
 PrintConsole *console; // Holds the printconsole
 
 /*============================================================================*/
@@ -417,6 +418,12 @@ int show_pager_stop() {
 
 		if (kDown & KEY_DOWN)
 			return 0;
+
+		if (kDown & KEY_START)
+		{
+			force_exit = true;
+			return 1;
+		}
 
 		if (kDown & KEY_MINUS)
 		{
@@ -1031,7 +1038,7 @@ void shell() {
         hidScanInput();
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
 
-        if (kDown & KEY_PLUS)
+        if (kDown & KEY_PLUS || force_exit)
             break;
 
         if (kDown & KEY_MINUS || show_command)

@@ -17,5 +17,7 @@ GPLv3.
 * Pager works as follows: 
   * Press the down key to show the next piece of information.
   * Press `-` to enter a command at any point.
-* No support for command histories (incompatible with swkbd)
+* No support for command histories (incompatible with swkbd).
 * Default config file is loaded from `/switch/delve/delve.conf`.
+* No support for custom type handlers.
+* Extra marker to indicate the end of a command.
