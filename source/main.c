@@ -631,7 +631,7 @@ void execute_handler(const char *handler, Selector *to) {
 
 
 void navigate(Selector *to) {
-	const char *query = NULL, *handler;
+	const char *query = NULL;
 
 	if (to == NULL) return;
 	switch (to->type) {
@@ -652,10 +652,8 @@ void navigate(Selector *to) {
 			break;
 		case 'i': case '3': /* ignore these selectors */
 			break;
-		default: /* try to invoke handler */
-			if ((handler = find_selector_handler(to->type)) != NULL) {
-				execute_handler(handler, to);
-			} else if (to->type == '0') { /* type 0 can be paged internally */
+		default:
+			if (to->type == '0') { /* type 0 can be paged internally */
 				char *text = download(to, NULL, NULL);
 				print_text(text);
 				if (text != NULL) free(text);
