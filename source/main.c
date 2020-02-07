@@ -73,7 +73,6 @@ Selector *bookmarks = NULL;
 Selector *history = NULL;
 Selector *menu = NULL;
 
-
 /*============================================================================*/
 void vlogf(const char *color, const char *fmt, va_list va) {
 	printf("\33[%sm", color);
@@ -393,13 +392,18 @@ int get_terminal_height() {
 
 
 int show_pager_stop() {
-	char buffer[256], *line;
-
-	printf("\33[0;32m-- press RETURN to continue (or `-` to quit and enter a command) --\33[0m");
+	printf("\33[0;32m-- press DOWN to continue (or `-` to quit and enter a command) --\33[0m");
 	fflush(stdout);
-	if ((line = fgets(buffer, sizeof(buffer), stdin)) == NULL) return 1;
-	line = str_skip(line, " \t\v");
-	return line[0] == 'q' || line[0] == 'Q';
+	while (true) {
+        hidScanInput();
+        u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+
+		if (kDown & KEY_DOWN)
+			return 0;
+
+		if (kDown & KEY_MINUS)
+			return 1;
+	}
 }
 
 
@@ -1012,7 +1016,7 @@ void shell() {
 
         if (kDown & KEY_MINUS)
         {
-            line = read_line("");
+            line = read_line(print_selector(history, 0));
             if((to =  find_selector(menu, line)) != NULL) navigate(to);
             else eval(line, NULL);
             puts("------ END OF COMMAND ------");
@@ -1052,8 +1056,6 @@ fail:
 
 
 void load_config_files() {
-	char buffer[1024], *home;
-
 	load_config_file("sdmc:/switch/delve.conf");
 }
 
