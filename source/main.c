@@ -350,7 +350,18 @@ char *next_token(char **str) {
 
 
 char *read_line(const char *fmt, ...) {
-	static char buffer[256];
+    Result rc=0;
+    char tmpoutstr[2048] = {0};
+
+    SwkbdConfig kbd;
+    rc = swkbdCreate(&kbd, 0);
+    if (R_SUCCEEDED(rc)) {
+        swkbdConfigMakePresetDefault(&kbd);
+        swkbdConfigSetSubText(&kbd, fmt);
+        rc = swkbdShow(&kbd, tmpoutstr, sizeof(tmpoutstr));
+    }
+    
+    static char buffer[256];
 	char *line;
 	if (fmt != NULL) {
 		va_list va;
@@ -604,7 +615,7 @@ void navigate(Selector *to) {
 			menu = new;
 			break;
 		}
-		case '4': case '5': case '6': case '9': /* binary files */
+		case '4': case '5': case '6': case '9': case 'g': case 'I': /* binary files */
 			download_to_file(to);
 			break;
 		case 'i': case '3': /* ignore these selectors */
@@ -983,10 +994,27 @@ void shell() {
 
 	eval("open $HOME_HOLE", NULL);
 
-	while ((line = read_line("(\33[35m%s\33[0m)> ", print_selector(history, 0))) != NULL) {
-		if ((to = find_selector(menu, line)) != NULL) navigate(to);
-		else eval(line, NULL);
-	}
+    while (appletMainLoop())
+    {
+        hidScanInput();
+        u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+
+        if (kDown & KEY_PLUS)
+            break;
+
+        if (kDown & KEY_MINUS)
+        {
+            line = read_line("");
+            if((to =  find_selector(menu, line)) != NULL) navigate(to);
+            else eval(line, NULL);
+            puts("------ END OF COMMAND ------");
+        }
+    }
+
+	// while ((line = read_line("(\33[35m%s\33[0m)> ", print_selector(history, 0))) != NULL) {
+	// 	if ((to = find_selector(menu, line)) != NULL) navigate(to);
+	// 	else eval(line, NULL);
+	// }
 }
 
 
@@ -1018,36 +1046,8 @@ fail:
 void load_config_files() {
 	char buffer[1024], *home;
 
-	load_config_file("/etc/delve.conf");
-	load_config_file("/usr/local/etc/delve.conf");
-	if ((home = getenv("HOME")) != NULL) {
-		snprintf(buffer, sizeof(buffer), "%s/.delve.conf", home);
-		load_config_file(buffer);
-	}
-	load_config_file("delve.conf");
+	load_config_file("sdmc:/switch/delve.conf");
 }
-
-
-void parse_arguments(int argc, char **argv) {
-	int ch;
-	while ((ch = getopt(argc, argv, "c:")) != -1) {
-		switch (ch) {
-			case 'c':
-				load_config_file(optarg);
-				break;
-			default:
-				fprintf(stderr,
-					"usage: delve [-c config-file] [url]\n"
-				);
-				exit(EXIT_SUCCESS);
-				break;
-		}
-	}
-
-	argc -= optind; argv += optind;
-	if (argc > 0) set_var(&variables, "HOME_HOLE", "%s", argv[0]);
-}
-
 
 void quit_client() {
 	free_variable(variables);
@@ -1061,10 +1061,12 @@ void quit_client() {
 
 
 int main(int argc, char **argv) {
+    // Init libnx console 
+    consoleInit(NULL);
+
 	atexit(quit_client);
 
 	load_config_files();
-	parse_arguments(argc, argv);
 
 	puts(
 		"delve - 0.15.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
@@ -1077,6 +1079,8 @@ int main(int argc, char **argv) {
 
 	shell();
 
+    // Exit libnx console
+    consoleExit(NULL);
 	return 0;
 }
 /* vim: set ts=4 sw=4 noexpandtab: */
