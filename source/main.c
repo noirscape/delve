@@ -419,7 +419,7 @@ int show_pager_stop() {
 		if (kDown & KEY_DOWN)
 			return 0;
 
-		if (kDown & KEY_START)
+		if (kDown & KEY_PLUS)
 		{
 			force_exit = true;
 			return 1;
