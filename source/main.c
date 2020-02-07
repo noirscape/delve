@@ -380,7 +380,7 @@ char *read_line(const char *fmt, ...) {
     rc = swkbdCreate(&kbd, 0);
     if (R_SUCCEEDED(rc)) {
         swkbdConfigMakePresetDefault(&kbd);
-        swkbdConfigSetSubText(&kbd, fmt);
+        swkbdConfigSetGuideText(&kbd, fmt);
         rc = swkbdShow(&kbd, buffer, sizeof(buffer));
 		if(R_SUCCEEDED(rc)) {
 			swkbdClose(&kbd);
@@ -409,7 +409,7 @@ int get_terminal_height() {
 
 
 int show_pager_stop() {
-	printf("\33[0;32m-- press DOWN to continue (or `-` to quit and enter a command) --\33[0m");
+	printf("\33[0;32m-- press DOWN to continue (or `-` to quit and enter a command) --\33[0m\n");
 	fflush(stdout);
 	while (true) {
         hidScanInput();
@@ -699,7 +699,8 @@ static const Help gopher_help[] = {
 	{
 		"authors",
 		"Credit goes to the following people:\n\n" \
-		"\tSebastian Steinhauer <s.steinhauer@yahoo.de>\n" \
+		"\tSebastian Steinhauer <s.steinhauer@yahoo.de> - Original creator of delve\n" \
+		"\tValentijn \"noirscape\" V. - Switch port" \
 	},
 	{
 		"back",
@@ -1078,7 +1079,7 @@ fail:
 
 
 void load_config_files() {
-	load_config_file("sdmc:/switch/delve.conf");
+	load_config_file("sdmc:/switch/delve/delve.conf");
 }
 
 void quit_client() {
@@ -1102,7 +1103,7 @@ int main() {
 		load_config_files();
 
 		printf(
-			"delve - 0.15.4  Copyright (C) 2019  Sebastian Steinhauer\n" \
+			"delve - 0.15.4-nx  Copyright (C) 2020 Sebastian Steinhauer and Valentijn V.\n" \
 			"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 			"This is free software, and you are welcome to redistribute it\n" \
 			"under certain conditions; type `help license' for details.\n" \
