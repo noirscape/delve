@@ -410,22 +410,26 @@ int get_terminal_height() {
 
 
 int show_pager_stop() {
-	printf("\33[0;32m-- press DOWN to continue (or `-` to quit and enter a command) --\33[0m\n");
+	printf("\33[0;32m-- press DOWN to continue (or `-`/F1 to quit and enter a command) --\33[0m\n");
 	fflush(stdout);
 	while (true) {
+		consoleUpdate(NULL);
         hidScanInput();
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+		bool keyboardContinuePressed = hidKeyboardDown(KBD_DOWN);
+		bool keyboardExitPressed = hidKeyboardDown(KBD_F2);
+		bool keyboardEnterCommandPressed = hidKeyboardDown(KBD_F1);
 
-		if (kDown & KEY_DOWN)
+		if (keyboardContinuePressed || (kDown & KEY_DOWN))
 			return 0;
 
-		if (kDown & KEY_PLUS)
+		if (keyboardExitPressed || (kDown & KEY_PLUS))
 		{
 			force_exit = true;
 			return 1;
 		}
 
-		if (kDown & KEY_MINUS)
+		if (keyboardEnterCommandPressed || (kDown & KEY_MINUS))
 		{
 			show_command = true;
 			return 1;
@@ -1037,11 +1041,13 @@ void shell() {
 		consoleUpdate(NULL);
         hidScanInput();
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+		bool keyboardExitPressed = hidKeyboardDown(KBD_F2);
+		bool keyboardEnterCommandPressed = hidKeyboardDown(KBD_F1);
 
-        if (kDown & KEY_PLUS || force_exit)
+        if (keyboardExitPressed || (kDown & KEY_PLUS) || force_exit)
             break;
 
-        if (kDown & KEY_MINUS || show_command)
+        if (keyboardEnterCommandPressed || (kDown & KEY_MINUS) || show_command)
         {
 			show_command = false;
             line = read_line(print_selector(history, 0));
@@ -1108,12 +1114,12 @@ int main() {
 		load_config_files();
 
 		printf(
-			"delve - 0.15.4-nx  Copyright (C) 2020 Sebastian Steinhauer and Valentijn V.\n" \
+			"delve - 0.15.4-nx (v1.1)  Copyright (C) 2020 Sebastian Steinhauer and Valentijn V.\n" \
 			"This program comes with ABSOLUTELY NO WARRANTY; for details type `help license'.\n" \
 			"This is free software, and you are welcome to redistribute it\n" \
 			"under certain conditions; type `help license' for details.\n" \
 			"\n" \
-			"Type `help` for help. Press `-` to start entering commands.\n" \
+			"Type `help` for help. Press `-`/F1 to start entering commands.\n" \
 		);
 
 		// eval("set page_text on", NULL);
@@ -1124,13 +1130,15 @@ int main() {
 		// Clean up sockets
 		socketExit();
 	} else {
-		printf("Could not initalize sockets for some reason. Press plus to exit.");
+		printf("Could not initalize sockets for some reason. Press plus/F2 to exit.");
 		while (appletMainLoop())
 		{
+			consoleUpdate(NULL);
 			hidScanInput();
 			u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+			bool keyboardExitPressed = hidKeyboardDown(KBD_F2);
 
-			if (kDown & KEY_PLUS)
+			if (keyboardExitPressed || (kDown & KEY_PLUS))
 				break;
 		}
 	}
